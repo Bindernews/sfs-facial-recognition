@@ -1434,13 +1434,17 @@ clone-stats@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/clone-stats/-/clone-stats-1.0.0.tgz#b3782dff8bb5474e18b9b6bf0fdfe782f8777680"
 
-clone@^1.0.0, clone@^1.0.2:
+clone@^1.0.0:
+  version "1.0.4"
+  resolved "https://registry.yarnpkg.com/clone/-/clone-1.0.4.tgz#da309cc263df15994c688ca902179ca3c7cd7c7e"
+
+clone@^1.0.2:
   version "1.0.3"
   resolved "https://registry.yarnpkg.com/clone/-/clone-1.0.3.tgz#298d7e2231660f40c003c2ed3140decf3f53085f"
 
 clone@^2.1.1:
-  version "2.1.1"
-  resolved "https://registry.yarnpkg.com/clone/-/clone-2.1.1.tgz#d217d1e961118e3ac9a4b8bba3285553bf647cdb"
+  version "2.1.2"
+  resolved "https://registry.yarnpkg.com/clone/-/clone-2.1.2.tgz#1b7f4b9f591f1e8f83670401600345a02887435f"
 
 cloneable-readable@^1.0.0:
   version "1.1.2"
@@ -5472,8 +5476,8 @@ recast@^0.12.5:
     source-map "~0.6.1"
 
 recast@^0.14.1:
-  version "0.14.5"
-  resolved "https://registry.yarnpkg.com/recast/-/recast-0.14.5.tgz#53f1f6edf7810bdfb39a25d0ff97d315bad7c314"
+  version "0.14.6"
+  resolved "https://registry.yarnpkg.com/recast/-/recast-0.14.6.tgz#11f171a3fdd09155c9156b8becc5ed2f0a68bd18"
   dependencies:
     ast-types "0.11.3"
     esprima "~4.0.0"
@@ -6723,9 +6727,9 @@ webpack-addons@^1.1.5:
   dependencies:
     jscodeshift "^0.4.0"
 
-webpack-cli@^2.0.12:
-  version "2.0.12"
-  resolved "https://registry.yarnpkg.com/webpack-cli/-/webpack-cli-2.0.12.tgz#64db876d044f03d8d6544281854b71a3a3c77dd3"
+webpack-cli@^2.0.13:
+  version "2.0.13"
+  resolved "https://registry.yarnpkg.com/webpack-cli/-/webpack-cli-2.0.13.tgz#6e2bd9ef91345344737217e22e29001ad8537518"
   dependencies:
     chalk "^2.3.2"
     cross-spawn "^6.0.5"
