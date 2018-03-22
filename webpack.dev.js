@@ -22,5 +22,10 @@ module.exports = {
       'process.env.NODE_ENV': JSON.stringify(MODE)
     })
   ],
+  devServer: {
+    // contentBase: common.OUTPUT_DIR,
+    compress: true,
+    port: 8000
+  },
   stats: common.STATS
 };

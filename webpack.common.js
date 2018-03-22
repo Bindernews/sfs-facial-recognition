@@ -1,15 +1,14 @@
 const path = require('path');
 
-// Config directories
-const SRC_DIR = path.resolve(__dirname, 'src');
-const OUTPUT_DIR = path.resolve(__dirname, 'dist');
+// Config directories. MUST include / on the end.
+const SRC_DIR = path.resolve(__dirname, 'src') + '/';
+const OUTPUT_DIR = path.resolve(__dirname, 'dist') + '/';
 
 // Default entry file
 const ENTRY = path.resolve(SRC_DIR, 'index.js');
 // Default output settings
 const OUTPUT = {
   path: OUTPUT_DIR,
-  publicPath: './',
   filename: 'bundle.js'
 };
 // Default HTML output file
