@@ -1,8 +1,8 @@
 const path = require('path');
 
 // Config directories. MUST include / on the end.
-const SRC_DIR = path.resolve(__dirname, 'src') + '/';
-const OUTPUT_DIR = path.resolve(__dirname, 'dist') + '/';
+const SRC_DIR = path.resolve(__dirname, 'src') + path.sep;
+const OUTPUT_DIR = path.resolve(__dirname, 'dist') + path.sep;
 
 // Default entry file
 const ENTRY = path.resolve(SRC_DIR, 'index.js');
@@ -33,6 +33,7 @@ function rules(opts) {
     {
       test: /\.jsx?$/,
       use: [{ loader: 'babel-loader' }],
+      exclude: path.resolve(__dirname, 'node_modules'),
       include: includeDir
     },
     {
