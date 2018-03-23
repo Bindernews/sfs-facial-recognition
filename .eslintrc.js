@@ -5,8 +5,9 @@ module.exports = {
     },
     "rules": {
         "react/jsx-filename-extension": [1, { "extensions": [".js", ".jsx"] }],
-        "react/prefer-es6-class": [1, 1],
-        "react/prefer-stateless-function": [0],
+        "react/jsx-max-props-per-line": [0],
+        "react/jsx-first-prop-new-line": [0],
+        "react/jsx-closing-bracket-location": [0],
         "linebreak-style": [0],
     }
 };

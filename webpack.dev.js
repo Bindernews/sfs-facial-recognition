@@ -25,7 +25,7 @@ module.exports = {
   devServer: {
     // contentBase: common.OUTPUT_DIR,
     compress: true,
-    port: 8000
+    port: 8080
   },
   stats: common.STATS
 };
