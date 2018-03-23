@@ -1,6 +1,8 @@
 import React from 'react';
-import { BrowserRouter, Switch, Route } from 'react-router-dom';
+import { BrowserRouter } from 'react-router-dom';
+import Grid from 'material-ui/Grid';
 import LoginSelector from './LoginSelector';
+import AppContent from './AppContent';
 
 export default class App extends React.Component {
   componentDidMount() {
@@ -9,15 +11,14 @@ export default class App extends React.Component {
   render() {
     return (
       <BrowserRouter>
-        <div>
-          <LoginSelector />
-          <Switch>
-            <Route exact path="/" component={() => (<p>Welcome</p>)} />
-            <Route path="/login-face" component={() => (<p>Login face</p>)} />
-            <Route path="/login-email" component={() => (<p>Login email</p>)} />
-            <Route path="/register" component={() => (<p>Register</p>)} />
-          </Switch>
-        </div>
+        <Grid container spacing={16}>
+          <Grid item sm={4}>
+            <LoginSelector />
+          </Grid>
+          <Grid item sm={6}>
+            <AppContent />
+          </Grid>
+        </Grid>
       </BrowserRouter>
     );
   }

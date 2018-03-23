@@ -1,6 +1,5 @@
 import React from 'react';
 import { render } from 'react-dom';
-import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 import App from './components/App';
 
 document.title = 'FaceRekt';
@@ -9,9 +8,9 @@ root.id = 'root';
 
 // Wrap the main application in a theme
 const Application = () => (
-  <MuiThemeProvider>
-    <App />
-  </MuiThemeProvider>
+  // <MuiThemeProvider>
+  <App />
+  // </MuiThemeProvider>
 );
 
 // Now we can render our application into it
