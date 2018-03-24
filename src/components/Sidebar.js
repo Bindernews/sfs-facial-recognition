@@ -10,27 +10,7 @@ const ImageStyle = {
   height: 'auto',
 };
 
-const LINKS = [
-  {
-    name: 'Home',
-    to: '/',
-    exact: true,
-  },
-  {
-    name: 'Login with facial recognition',
-    to: '/login-face',
-  },
-  {
-    name: 'Login with email',
-    to: '/login-email',
-  },
-  {
-    name: 'Register for facial recognition',
-    to: '/register',
-  },
-];
-
-const NavButton = ({ name, to, exact }) => (
+export const NavButton = ({ name, to, exact }) => (
   <Route exact={exact} path={to} children={({ match }) => (
     <Link to={to}>
       <Button fullWidth variant={(match && 'raised') || 'flat'}>{name}</Button>
@@ -38,19 +18,24 @@ const NavButton = ({ name, to, exact }) => (
   )} />
 );
 
-const Sidebar = () => {
-  const links = LINKS.map(data => (
-    <Grid key={data.name} item>
-      <NavButton exact={data.exact} to={data.to} name={data.name} />
+const Sidebar = () => (
+  <Grid container direction="column" justify="flex-start" alignItems="stretch" spacing={16}>
+    <Grid item>
+      <img style={ImageStyle} src="http://partyhorse.party/images/BeachHorse.jpg" alt="A horse on a beach" />
     </Grid>
-  ));
-  return (
-    <Grid container direction="column" justify="flex-start" alignItems="stretch" spacing={16}>
-      <Grid item>
-        <img style={ImageStyle} src="http://partyhorse.party/images/BeachHorse.jpg" alt="A horse on a beach" />
-      </Grid>
-      { links }
+    <Grid item>
+      <NavButton exact to="/" name="Home" />
     </Grid>
-  );
-};
+    <Grid item>
+      <NavButton to="/login-face" name="Login with facial recognition" />
+    </Grid>
+    <Grid item>
+      <NavButton to="/login-email" name="Login with email" />
+    </Grid>
+    <Grid item>
+      <NavButton to="/register" name="Register for facial recognition" />
+    </Grid>
+  </Grid>
+);
+
 export default Sidebar;

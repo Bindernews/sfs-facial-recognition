@@ -1,12 +1,25 @@
 import React from 'react';
 import { Switch, Route } from 'react-router-dom';
 
+import HomePage from './HomePage';
+import LoginEmail from './LoginEmail';
+import LoginFace from './LoginFace';
+import RegisterFace from './RegisterFace';
+
 const AppContent = () => (
   <Switch>
-    <Route exact path="/" component={() => (<p>Welcome</p>)} />
-    <Route path="/login-face" component={() => (<p>Login face</p>)} />
-    <Route path="/login-email" component={() => (<p>Login email</p>)} />
-    <Route path="/register" component={() => (<p>Register</p>)} />
+    <Route exact path="/">
+      <HomePage />
+    </Route>
+    <Route path="/login-face">
+      <LoginFace />
+    </Route>
+    <Route path="/login-email">
+      <LoginEmail />
+    </Route>
+    <Route path="/register">
+      <RegisterFace />
+    </Route>
   </Switch>
 );
 export default AppContent;
