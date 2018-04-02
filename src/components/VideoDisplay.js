@@ -32,6 +32,10 @@ export default class VideoDisplay extends React.Component {
     return this.captureToCanvas(this.canvasRef).toDataURL('image/jpeg');
   }
 
+  captureAsPng() {
+    return this.captureToCanvas(this.canvasRef).toDataURL('image/png');
+  }
+
   /**
    * Save the current video frame to the provided canvas.
    * @param {HTMLCanvasElement} canvas The canvas to which the current video frame will be saved.

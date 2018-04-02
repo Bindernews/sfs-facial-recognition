@@ -4,7 +4,7 @@ import VideoDisplay from './VideoDisplay';
 import ErrorDialog from './ErrorDialog';
 
 // URL to send faces to
-const FACE_REC_URL = '/api/face';
+const FACE_REC_URL = '/receive';
 // Timeout before we give up (milliseconds)
 const FACE_REC_TIMEOUT = 60 * 1000;
 
@@ -12,6 +12,7 @@ export default class LoginFace extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
+      identity: null,
       error: {},
     };
     this.videoRef = null;
@@ -45,17 +46,22 @@ export default class LoginFace extends React.Component {
   doFaceRec() {
     const http = new XMLHttpRequest();
     http.open('POST', FACE_REC_URL, true);
-    http.setRequestHeader('Content-type', 'image/jpeg');
+    http.setRequestHeader('Content-type', 'application/json');
     http.onload = () => {
       if (!this.isCapturing) {
         return;
       }
+      if (http.status != 200) {
+        this.stopFaceRec();
+        this.setError(`HTTP error ${http.status}`);
+        return;
+      }
       try {
         const resp = JSON.parse(http.responseText);
-        if (resp.success) {
+        if (resp.identity) {
           // this is when login is successfull
           this.stopFaceRec();
-          // TODO login successful
+          this.setState({ identity: resp.identity });
         } else if (resp.error) {
           // This is when an error occurs
           this.stopFaceRec();
@@ -66,10 +72,15 @@ export default class LoginFace extends React.Component {
         this.setError(err);
       }
     };
+    // Error callback
     http.onerror = () => {
+      this.stopFaceRec();
       this.setError(`HTTP error code: ${http.status}`);
     };
-    http.send(this.videoRef.captureAsJpeg());
+    // Send the image to the backend
+    http.send(JSON.stringify({
+      imgBase64: this.videoRef.captureAsPng()
+    }));
   }
 
   stopFaceRec() {
@@ -86,7 +97,17 @@ export default class LoginFace extends React.Component {
   }
 
   render() {
-    const { error } = this.state;
+    const { error, identity } = this.state;
+
+    // Conditional rendering!
+    const identityComponents = (identity !== null) ? (
+      <Grid item>
+        <p>
+          You&apos;re logged in, {identity}!
+        </p>
+      </Grid>
+    ) : null;
+
     return (
       <Grid container>
         <Grid item>
@@ -96,6 +117,7 @@ export default class LoginFace extends React.Component {
             onError={(err) => { this.setError(err); }}
           />
         </Grid>
+        { identityComponents }
         <ErrorDialog
           open={error.open}
           message={error.message}
