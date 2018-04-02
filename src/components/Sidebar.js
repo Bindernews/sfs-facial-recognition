@@ -1,6 +1,7 @@
-/* eslint react/no-children-prop: 0 */
+/* eslint react/no-children-prop: 0, jsx-a11y/anchor-is-valid: 0 */
 
-import React, { PropTypes } from 'react';
+import React from 'react';
+import PropTypes from 'prop-types';
 import { Link, Route } from 'react-router-dom';
 import Grid from 'material-ui/Grid';
 import Button from 'material-ui/Button';
@@ -17,6 +18,14 @@ export const NavButton = ({ name, to, exact }) => (
     </Link>
   )} />
 );
+NavButton.propTypes = {
+  name: PropTypes.string.isRequired,
+  to: PropTypes.string.isRequired,
+  exact: PropTypes.bool,
+};
+NavButton.defaultProps = {
+  exact: false,
+};
 
 const Sidebar = () => (
   <Grid container direction="column" justify="flex-start" alignItems="stretch" spacing={16}>

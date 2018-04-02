@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter } from 'react-router-dom';
+import { MemoryRouter } from 'react-router-dom';
 import Grid from 'material-ui/Grid';
 import Sidebar from './Sidebar';
 import AppContent from './AppContent';
@@ -10,16 +10,16 @@ export default class App extends React.Component {
 
   render() {
     return (
-      <BrowserRouter>
+      <MemoryRouter>
         <Grid container spacing={16}>
-          <Grid item md={2}>
+          <Grid item sm={2}>
             <Sidebar />
           </Grid>
-          <Grid item md>
+          <Grid item sm>
             <AppContent />
           </Grid>
         </Grid>
-      </BrowserRouter>
+      </MemoryRouter>
     );
   }
 }
