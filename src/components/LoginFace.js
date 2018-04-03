@@ -1,24 +1,42 @@
 import React from 'react';
 import Grid from 'material-ui/Grid';
+import Button from 'material-ui/Button';
+import Dialog, {
+  DialogActions,
+  DialogTitle,
+} from 'material-ui/Dialog';
+
 import VideoDisplay from './VideoDisplay';
 import ErrorDialog from './ErrorDialog';
 
 // URL to send faces to
 const FACE_REC_URL = '/receive';
-// Timeout before we give up (milliseconds)
-const FACE_REC_TIMEOUT = 60 * 1000;
+// Timeout before we reset for the next user.
+const IDENTITY_RESET_TIMEOUT = 10 * 1000;
+// Set to false to not send backend data. Useful for debugging.
+const HAS_BACKEND = true;
 
 export default class LoginFace extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
+      potentialIdentity: null,
       identity: null,
       error: {},
     };
     this.videoRef = null;
-    this.isCapturing = false;
-    this.captureTimer = null;
-    this.timeoutTimer = null;
+    this.resetTimer = null;
+
+    // Bind callbacks
+    const callbacks = ['setError', 'closeError', 'doFaceRec', 'identityCorrect', 'identityWrong',
+      'identityReset'];
+    for (let i = 0; i < callbacks.length; i += 1) {
+      this[callbacks[i]] = Object.getPrototypeOf(this)[callbacks[i]].bind(this);
+    }
+  }
+
+  componentWillUnmount() {
+    this.videoRef = null;
   }
 
   setError(err) {
@@ -30,100 +48,136 @@ export default class LoginFace extends React.Component {
     this.setState({ error: {} });
   }
 
-  startFaceRec() {
-    this.isCapturing = true;
-    // Start the capture timer on a short interval and the timeout
-    this.captureTimer = setInterval(() => {
-      this.doFaceRec();
-    }, 100);
-    // If the timeout occurs stop face rec and show an error
-    this.timeoutTimer = setTimeout(() => {
-      this.stopFaceRec();
-      this.setState({ error: { open: true, message: 'Unable to recognize your face' } });
-    }, FACE_REC_TIMEOUT);
+  doFaceRec() {
+    const data = {
+      imgBase64: this.videoRef.captureAsPng(),
+    };
+    // Reset the UI if they take more than 2 minutes
+    this.resetTimer = setTimeout(this.identityReset, IDENTITY_RESET_TIMEOUT);
+
+    if (HAS_BACKEND) {
+      // Send the image to the backend
+      this.sendPost(FACE_REC_URL, data, (http) => {
+        const resp = JSON.parse(http.responseText);
+        if (resp.identity) {
+          // Login successful, verify with user
+          this.setState({ potentialIdentity: resp.identity });
+          // Prepare timeout if they don't respond
+          this.resetTimer = setTimeout(this.identityReset, IDENTITY_RESET_TIMEOUT);
+        } else if (resp.error) {
+          // Login failed, show the error
+          this.setError(resp.error.message || JSON.stringify(resp.error));
+        }
+      });
+    } else {
+      this.setState({ potentialIdentity: 'John Smith' });
+    }
   }
 
-  doFaceRec() {
+  sendPost(url, data, cb) {
     const http = new XMLHttpRequest();
     http.open('POST', FACE_REC_URL, true);
     http.setRequestHeader('Content-type', 'application/json');
     http.onload = () => {
-      if (!this.isCapturing) {
-        return;
-      }
-      if (http.status != 200) {
-        this.stopFaceRec();
+      if (http.status !== 200) {
         this.setError(`HTTP error ${http.status}`);
-        return;
-      }
-      try {
-        const resp = JSON.parse(http.responseText);
-        if (resp.identity) {
-          // this is when login is successfull
-          this.stopFaceRec();
-          this.setState({ identity: resp.identity });
-        } else if (resp.error) {
-          // This is when an error occurs
-          this.stopFaceRec();
-          this.setError(resp.error.message);
+      } else {
+        // If no error, run the callback
+        try {
+          cb();
+        } catch (err) {
+          this.setError(err);
         }
-      } catch (err) {
-        this.stopFaceRec();
-        this.setError(err);
       }
     };
     // Error callback
     http.onerror = () => {
-      this.stopFaceRec();
       this.setError(`HTTP error code: ${http.status}`);
     };
-    // Send the image to the backend
-    http.send(JSON.stringify({
-      imgBase64: this.videoRef.captureAsPng()
-    }));
+    // Send the request
+    http.send(JSON.stringify(data));
+    return http;
   }
 
-  stopFaceRec() {
-    this.isCapturing = false;
-    // Stop the capture timer and the timeout
-    if (this.captureTimer) {
-      clearInterval(this.captureTimer);
-      this.captureTimer = null;
+  /**
+   * Callback for when the user verifies the identity is correct.
+   */
+  identityCorrect() {
+    if (HAS_BACKEND) {
+      this.sendPost('/verify', { verify: true }, (http) => {
+        this.setState({ identity: this.state.potentialIdentity });
+      });
+    } else {
+      this.setState({ identity: this.state.potentialIdentity });
     }
-    if (this.timeoutTimer) {
-      clearTimeout(this.timeoutTimer);
-      this.timeoutTimer = null;
+  }
+
+  /**
+   * Callback to reset the identity for new people.
+   */
+  identityReset() {
+    this.setState({ identity: null, potentialIdentity: null });
+    if (this.resetTimer) {
+      clearTimeout(this.resetTimer);
     }
+    this.resetTimer = null;
+  }
+
+  /**
+   * Callback for when the user says the identity is wrong.
+   */
+  identityWrong() {
+    this.setState({ potentialIdentity: null });
   }
 
   render() {
-    const { error, identity } = this.state;
+    const { error, potentialIdentity, identity } = this.state;
 
-    // Conditional rendering!
-    const identityComponents = (identity !== null) ? (
-      <Grid item>
-        <p>
-          You&apos;re logged in, {identity}!
-        </p>
-      </Grid>
+    // Create the "you logged in" dialog only if we verified their identity
+    const loggedInDialog = (identity !== null) ? (
+      <Dialog open>
+        <DialogTitle>{`You're logged in ${identity}`}</DialogTitle>
+        <DialogActions>
+          <Button onClick={this.identityReset}>Ok</Button>
+        </DialogActions>
+      </Dialog>
+    ) : null;
+
+    // Show verification dialog
+    const verifyDialog = (potentialIdentity && !identity) ? (
+      <Dialog open>
+        <DialogTitle>Are you {potentialIdentity}?</DialogTitle>
+        <DialogActions>
+          <Button onClick={this.identityCorrect}>Yes</Button>
+          <Button onClick={this.identityWrong}>No</Button>
+        </DialogActions>
+      </Dialog>
     ) : null;
 
     return (
-      <Grid container>
-        <Grid item>
-          <VideoDisplay
-            ref={(id) => { this.videoRef = id; }}
-            onLoad={() => { this.startFaceRec(); }}
-            onError={(err) => { this.setError(err); }}
-          />
+      <div>
+        {/* Show the video and "Take a picture" button */}
+        <Grid container direction="column" justify="center" alignItems="center">
+          <Grid item>
+            <VideoDisplay
+              ref={(id) => { this.videoRef = id; }}
+              onError={this.setError}
+            />
+          </Grid>
+          <Grid item>
+            <Button onClick={this.doFaceRec}>
+              Take picture
+            </Button>
+          </Grid>
         </Grid>
-        { identityComponents }
+        { verifyDialog }
+        { loggedInDialog }
         <ErrorDialog
           open={error.open}
           message={error.message}
-          onClose={() => { this.closeError(); }}
+          onClose={this.closeError}
         />
-      </Grid>
+      </div>
     );
   }
 }

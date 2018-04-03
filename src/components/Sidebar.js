@@ -33,9 +33,6 @@ const Sidebar = () => (
       <img style={ImageStyle} src="http://partyhorse.party/images/BeachHorse.jpg" alt="A horse on a beach" />
     </Grid>
     <Grid item>
-      <NavButton exact to="/" name="Home" />
-    </Grid>
-    <Grid item>
       <NavButton to="/login-face" name="Login with facial recognition" />
     </Grid>
     <Grid item>

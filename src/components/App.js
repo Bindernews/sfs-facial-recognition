@@ -4,6 +4,10 @@ import Grid from 'material-ui/Grid';
 import Sidebar from './Sidebar';
 import AppContent from './AppContent';
 
+const ContentStyle = {
+  textAlign: 'center',
+};
+
 export default class App extends React.Component {
   componentDidMount() {
   }
@@ -16,7 +20,9 @@ export default class App extends React.Component {
             <Sidebar />
           </Grid>
           <Grid item sm>
-            <AppContent />
+            <div style={ContentStyle}>
+              <AppContent />
+            </div>
           </Grid>
         </Grid>
       </MemoryRouter>
