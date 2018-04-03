@@ -1,9 +1,11 @@
 import React from 'react';
 import Grid from 'material-ui/Grid';
 import Button from 'material-ui/Button';
+import { CircularProgress } from 'material-ui/Progress';
 import Dialog, {
   DialogActions,
   DialogTitle,
+  DialogContent,
 } from 'material-ui/Dialog';
 
 import VideoDisplay from './VideoDisplay';
@@ -16,11 +18,18 @@ const IDENTITY_RESET_TIMEOUT = 10 * 1000;
 // Set to false to not send backend data. Useful for debugging.
 const HAS_BACKEND = true;
 
+const LOGIN_FLOW = {
+  Normal: 0,
+  Verifying: 1,
+  LoggingIn: 2,
+  LoggedIn: 3,
+};
+
 export default class LoginFace extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      potentialIdentity: null,
+      flow: LOGIN_FLOW.Normal,
       identity: null,
       error: {},
     };
@@ -29,7 +38,7 @@ export default class LoginFace extends React.Component {
 
     // Bind callbacks
     const callbacks = ['setError', 'closeError', 'doFaceRec', 'identityCorrect', 'identityWrong',
-      'identityReset'];
+      'identityReset', 'loginCancel', 'closeLogin'];
     for (let i = 0; i < callbacks.length; i += 1) {
       this[callbacks[i]] = Object.getPrototypeOf(this)[callbacks[i]].bind(this);
     }
@@ -44,8 +53,11 @@ export default class LoginFace extends React.Component {
     this.setState({ error: { open: true, message: err.toString() } });
   }
 
+  /**
+   * Close the error dialog. Keep the message due to the fade out time.
+   */
   closeError() {
-    this.setState({ error: {} });
+    this.setState({ error: { open: false, message: this.state.error.message } });
   }
 
   doFaceRec() {
@@ -61,7 +73,7 @@ export default class LoginFace extends React.Component {
         const resp = JSON.parse(http.responseText);
         if (resp.identity) {
           // Login successful, verify with user
-          this.setState({ potentialIdentity: resp.identity });
+          this.setState({ flow: LOGIN_FLOW.Verifying, identity: resp.identity });
           // Prepare timeout if they don't respond
           this.resetTimer = setTimeout(this.identityReset, IDENTITY_RESET_TIMEOUT);
         } else if (resp.error) {
@@ -70,7 +82,7 @@ export default class LoginFace extends React.Component {
         }
       });
     } else {
-      this.setState({ potentialIdentity: 'John Smith' });
+      this.setState({ flow: LOGIN_FLOW.Verifying, identity: 'John Smith' });
     }
   }
 
@@ -103,12 +115,17 @@ export default class LoginFace extends React.Component {
    * Callback for when the user verifies the identity is correct.
    */
   identityCorrect() {
+    // Say that we're logging in then tell the backend to actually do it
+    this.setState({ flow: LOGIN_FLOW.LoggingIn });
     if (HAS_BACKEND) {
       this.sendPost('/verify', { verify: true }, (http) => {
-        this.setState({ identity: this.state.potentialIdentity });
+        this.setState({ flow: LOGIN_FLOW.LoggedIn });
       });
     } else {
-      this.setState({ identity: this.state.potentialIdentity });
+      // Simulate processing
+      setTimeout(() => {
+        this.setState({ flow: LOGIN_FLOW.LoggedIn });
+      }, 2 * 1000);
     }
   }
 
@@ -116,7 +133,7 @@ export default class LoginFace extends React.Component {
    * Callback to reset the identity for new people.
    */
   identityReset() {
-    this.setState({ identity: null, potentialIdentity: null });
+    this.setState({ flow: LOGIN_FLOW.Normal, identity: null });
     if (this.resetTimer) {
       clearTimeout(this.resetTimer);
     }
@@ -127,32 +144,21 @@ export default class LoginFace extends React.Component {
    * Callback for when the user says the identity is wrong.
    */
   identityWrong() {
-    this.setState({ potentialIdentity: null });
+    this.identityReset();
+  }
+
+  loginCancel() {
+    this.identityReset();
+    // TODO send message to backend to cancel the login
+  }
+
+  closeLogin() {
+    // Set the flow back to normal and let the identity reset once the animation is finished
+    this.setState({ flow: LOGIN_FLOW.Normal });
   }
 
   render() {
-    const { error, potentialIdentity, identity } = this.state;
-
-    // Create the "you logged in" dialog only if we verified their identity
-    const loggedInDialog = (identity !== null) ? (
-      <Dialog open>
-        <DialogTitle>{`You're logged in ${identity}`}</DialogTitle>
-        <DialogActions>
-          <Button onClick={this.identityReset}>Ok</Button>
-        </DialogActions>
-      </Dialog>
-    ) : null;
-
-    // Show verification dialog
-    const verifyDialog = (potentialIdentity && !identity) ? (
-      <Dialog open>
-        <DialogTitle>Are you {potentialIdentity}?</DialogTitle>
-        <DialogActions>
-          <Button onClick={this.identityCorrect}>Yes</Button>
-          <Button onClick={this.identityWrong}>No</Button>
-        </DialogActions>
-      </Dialog>
-    ) : null;
+    const { error, identity, flow } = this.state;
 
     return (
       <div>
@@ -170,12 +176,36 @@ export default class LoginFace extends React.Component {
             </Button>
           </Grid>
         </Grid>
-        { verifyDialog }
-        { loggedInDialog }
+        {/* Dialog to ask if you are who the face rec thinks you are. */}
+        <Dialog open={flow === LOGIN_FLOW.Verifying}>
+          <DialogTitle>Are you {identity}?</DialogTitle>
+          <DialogActions>
+            <Button onClick={this.identityCorrect}>Yes</Button>
+            <Button onClick={this.identityWrong}>No</Button>
+          </DialogActions>
+        </Dialog>
+        {/* Spinny wheel dialog */}
+        <Dialog open={flow === LOGIN_FLOW.LoggingIn}>
+          <DialogTitle>Logging in</DialogTitle>
+          <DialogContent>
+            <CircularProgress />
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={this.loginCancel}>Cancel</Button>
+          </DialogActions>
+        </Dialog>
+        {/* Dialog to confirm you've logged in. */}
+        <Dialog open={flow === LOGIN_FLOW.LoggedIn} onClose={this.identityReset}>
+          <DialogTitle>{`You're logged in ${identity}`}</DialogTitle>
+          <DialogActions>
+            <Button onClick={this.closeLogin}>Ok</Button>
+          </DialogActions>
+        </Dialog>
+        {/* Dialog for errors. */}
         <ErrorDialog
           open={error.open}
           message={error.message}
-          onClose={this.closeError}
+          requestClose={this.closeError}
         />
       </div>
     );

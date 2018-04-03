@@ -8,7 +8,7 @@ import Dialog, {
   DialogTitle,
 } from 'material-ui/Dialog';
 
-const ErrorDialog = ({ open, message, onClose }) => (
+const ErrorDialog = ({ open, message, requestClose, onClose }) => (
   <Dialog
     open={open}
     onClose={onClose}
@@ -22,7 +22,7 @@ const ErrorDialog = ({ open, message, onClose }) => (
       </DialogContentText>
     </DialogContent>
     <DialogActions>
-      <Button onClick={onClose} color="primary">
+      <Button onClick={requestClose} color="primary">
         Acknowledge
       </Button>
     </DialogActions>
@@ -31,11 +31,13 @@ const ErrorDialog = ({ open, message, onClose }) => (
 ErrorDialog.propTypes = {
   open: PropTypes.bool,
   message: PropTypes.string,
-  onClose: PropTypes.func.isRequired,
+  requestClose: PropTypes.func.isRequired,
+  onClose: PropTypes.func,
 };
 ErrorDialog.defaultProps = {
   open: false,
   message: '',
+  onClose: () => {},
 };
 
 export default ErrorDialog;
