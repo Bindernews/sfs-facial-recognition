@@ -2,22 +2,24 @@
 
 import React from 'react';
 import PropTypes from 'prop-types';
-import { Link, Route } from 'react-router-dom';
+import { withRouter, matchPath } from 'react-router-dom';
 import Grid from 'material-ui/Grid';
 import Button from 'material-ui/Button';
+
+import LinkButton from './LinkButton';
 
 const ImageStyle = {
   width: '100%',
   height: 'auto',
 };
 
-export const NavButton = ({ name, to, exact }) => (
-  <Route exact={exact} path={to} children={({ match }) => (
-    <Link to={to}>
-      <Button fullWidth variant={(match && 'raised') || 'flat'}>{name}</Button>
-    </Link>
-  )} />
-);
+export const NavButton = withRouter(({ name, to, exact, location, history }) => {
+  const matches = matchPath(location.pathname, { path: to, exact });
+  const variant = (matches && 'raised') || 'flat';
+  return (
+    <Button onClick={() => { history.push(to); }} variant={variant} fullWidth>{name}</Button>
+  );
+});
 NavButton.propTypes = {
   name: PropTypes.string.isRequired,
   to: PropTypes.string.isRequired,
@@ -39,7 +41,7 @@ const Sidebar = () => (
       <NavButton to="/login-email" name="Login with email" />
     </Grid>
     <Grid item>
-      <NavButton to="/register" name="Register for facial recognition" />
+      <NavButton to="/register/1" name="Register for facial recognition" />
     </Grid>
   </Grid>
 );

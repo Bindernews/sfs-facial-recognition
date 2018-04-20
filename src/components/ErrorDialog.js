@@ -40,4 +40,16 @@ ErrorDialog.defaultProps = {
   onClose: () => {},
 };
 
+export function setError(err) {
+  this.setState({ error: { open: true, message: err.toString() } });
+}
+
+/**
+ * Close the error dialog. Keep the message due to the fade out time.
+ */
+export function closeError() {
+  this.setState({ error: { open: false, message: this.state.error.message } });
+}
+
 export default ErrorDialog;
+

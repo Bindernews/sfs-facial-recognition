@@ -8,8 +8,9 @@ import Dialog, {
   DialogContent,
 } from 'material-ui/Dialog';
 
+import { sendPost } from '../util';
 import VideoDisplay from './VideoDisplay';
-import ErrorDialog from './ErrorDialog';
+import ErrorDialog, { setError, closeError } from './ErrorDialog';
 
 // URL to send faces to
 const FACE_REC_URL = '/receive';
@@ -37,27 +38,19 @@ export default class LoginFace extends React.Component {
     this.resetTimer = null;
 
     // Bind callbacks
-    const callbacks = ['setError', 'closeError', 'doFaceRec', 'identityCorrect', 'identityWrong',
-      'identityReset', 'loginCancel', 'closeLogin'];
+    const callbacks = ['doFaceRec', 'identityCorrect', 'identityWrong', 'identityReset',
+      'loginCancel', 'closeLogin'];
     for (let i = 0; i < callbacks.length; i += 1) {
       this[callbacks[i]] = Object.getPrototypeOf(this)[callbacks[i]].bind(this);
     }
+    // Create setError and closeError functions for ourself
+    this.setError = setError.bind(this);
+    this.closeError = closeError.bind(this);
+    this.sendPost = sendPost.bind(this);
   }
 
   componentWillUnmount() {
     this.videoRef = null;
-  }
-
-  setError(err) {
-    console.error('Error:', err);
-    this.setState({ error: { open: true, message: err.toString() } });
-  }
-
-  /**
-   * Close the error dialog. Keep the message due to the fade out time.
-   */
-  closeError() {
-    this.setState({ error: { open: false, message: this.state.error.message } });
   }
 
   doFaceRec() {
@@ -84,31 +77,6 @@ export default class LoginFace extends React.Component {
     } else {
       this.setState({ flow: LOGIN_FLOW.Verifying, identity: 'John Smith' });
     }
-  }
-
-  sendPost(url, data, cb) {
-    const http = new XMLHttpRequest();
-    http.open('POST', FACE_REC_URL, true);
-    http.setRequestHeader('Content-type', 'application/json');
-    http.onload = () => {
-      if (http.status !== 200) {
-        this.setError(`HTTP error ${http.status}`);
-      } else {
-        // If no error, run the callback
-        try {
-          cb();
-        } catch (err) {
-          this.setError(err);
-        }
-      }
-    };
-    // Error callback
-    http.onerror = () => {
-      this.setError(`HTTP error code: ${http.status}`);
-    };
-    // Send the request
-    http.send(JSON.stringify(data));
-    return http;
   }
 
   /**

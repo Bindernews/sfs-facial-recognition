@@ -6,6 +6,7 @@ import AppContent from './AppContent';
 
 const ContentStyle = {
   textAlign: 'center',
+  height: '100%',
 };
 
 export default class App extends React.Component {
