@@ -9,6 +9,7 @@ import LinkButton from './LinkButton';
 import VideoDisplay from './VideoDisplay';
 import ErrorDialog, { setError, closeError } from './ErrorDialog';
 
+
 export default class RegisterFace extends React.Component {
   constructor(props) {
     super(props);
@@ -22,14 +23,13 @@ export default class RegisterFace extends React.Component {
 
     this.setError = setError.bind(this);
     this.closeError = closeError.bind(this);
-    this.sendPost = sendPost.bind(this);
     this.clearForm = this.clearForm.bind(this);
     this.doRegister = this.doRegister.bind(this);
     this.takePhoto = this.takePhoto.bind(this);
   }
 
   componentWillMount() {
-    this.clearForm();
+    //this.clearForm();
   }
 
   componentWillUnmount() {
@@ -55,9 +55,13 @@ export default class RegisterFace extends React.Component {
       email: document.getElementById('email').value,
       imgBase64: this.state.photo,
     };
-    this.sendPost('/introduce', data, (http) => {
-      this.setState({ redirect: '/register/4' });
-    });
+    sendPost('/introduce', data, 2000)
+      .then((http) => {
+        this.setState({ redirect: '/register/4' });
+      }).catch((err) => {
+        this.setState({ redirect: '/register/1' });
+        this.setError(err);
+      });
     /* window.setTimeout(() => {
       this.setState({ redirect: '/register/4' });
     }, 2000); */
@@ -69,73 +73,85 @@ export default class RegisterFace extends React.Component {
     // Note: Normally you DON'T do this, but we want to set state w/o re-rendering
     this.state.redirect = null;
 
+    // Show this when we're trying to get your face
+    const page1 = (
+      <Grid container direction="column" justify="flex-start" alignItems="center" spacing={16}>
+        <Grid item>
+          <p>To register your face, begin by clicking &quot;Take Photo&quot; below.</p>
+        </Grid>
+        <Grid item>
+          <VideoDisplay
+            ref={(id) => { this.videoRef = id; }}
+            onError={this.setError}
+          />
+        </Grid>
+        <Grid item>
+          <LinkButton to="/register/2" onClick={this.takePhoto}>Take Photo</LinkButton>
+        </Grid>
+      </Grid>
+    );
+
+    // Show this when we have your face and we need your info.
+    const page2 = (
+      <Grid container direction="column" justify="flex-start" alignItems="center" spacing={16}>
+        <Grid item>
+          Now please fill in your information.
+        </Grid>
+        <Grid item>
+          <TextField
+            id="firstName"
+            label="First name"
+          />
+        </Grid>
+        <Grid item>
+          <TextField
+            id="lastName"
+            label="Last name"
+          />
+        </Grid>
+        <Grid item>
+          <TextField
+            id="email"
+            label="Email"
+          />
+        </Grid>
+        <Grid item>
+          <LinkButton to="/register/1" onClick={this.clearForm}>Back</LinkButton>
+          <LinkButton to="/register/3" onClick={this.doRegister}>Register</LinkButton>
+        </Grid>
+      </Grid>
+    );
+
+    // This page is for showing the user that we're registering them
+    const page3 = (
+      <div>
+        <p>Registering....</p>
+        <CircularProgress />
+      </div>
+    );
+
+    // Tell them they've been registered
+    const page4 = (
+      <div>
+        <p>Registered!</p>
+      </div>
+    );
+
     return (
-      <Switch>
-        {redirectTag}
-        {/* Show this when we're trying to get your face */}
-        <Route path="/register/1/">
-          <Grid container direction="column" justify="flex-start" alignItems="center" spacing={16}>
-            <Grid item>
-              <p>To register your face, begin by clicking &quot;Take Photo&quot; below.</p>
-            </Grid>
-            <Grid item>
-              <VideoDisplay
-                ref={(id) => { this.videoRef = id; }}
-                onError={this.setError}
-              />
-            </Grid>
-            <Grid item>
-              <LinkButton to="/register/2" onClick={this.takePhoto}>Take Photo</LinkButton>
-            </Grid>
-          </Grid>
-        </Route>
-        {/* Show this when we have your face and we need your info. */}
-        <Route path="/register/2">
-          <Grid container direction="column" justify="flex-start" alignItems="center" spacing={16}>
-            <Grid item>
-              Now please fill in your information.
-            </Grid>
-            <Grid item>
-              <TextField
-                id="firstName"
-                label="First name"
-              />
-            </Grid>
-            <Grid item>
-              <TextField
-                id="lastName"
-                label="Last name"
-              />
-            </Grid>
-            <Grid item>
-              <TextField
-                id="email"
-                label="Email"
-              />
-            </Grid>
-            <Grid item>
-              <LinkButton to="/register/1" onClick={this.clearForm}>Back</LinkButton>
-              <LinkButton to="/register/3" onClick={this.doRegister}>Register</LinkButton>
-            </Grid>
-          </Grid>
-        </Route>
-        <Route path="/register/3">
-          <div>
-            <p>Registering....</p>
-            <CircularProgress />
-          </div>
-        </Route>
-        <Route path="/register/4">
-          <div>
-            <p>Registered!</p>
-          </div>
-        </Route>
+      <div>
         <ErrorDialog
           open={error.open}
           message={error.message}
           requestClose={this.closeError}
         />
-      </Switch>
+        {redirectTag}
+        <Switch>
+          <Route path="/register/1">{page1}</Route>
+          <Route path="/register/2">{page2}</Route>
+          <Route path="/register/3">{page3}</Route>
+          <Route path="/register/4">{page4}</Route>
+        </Switch>
+      </div>
     );
   }
 }

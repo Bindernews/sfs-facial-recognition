@@ -41,6 +41,7 @@ ErrorDialog.defaultProps = {
 };
 
 export function setError(err) {
+  console.error(err);
   this.setState({ error: { open: true, message: err.toString() } });
 }
 

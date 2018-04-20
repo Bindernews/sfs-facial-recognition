@@ -46,7 +46,6 @@ export default class LoginFace extends React.Component {
     // Create setError and closeError functions for ourself
     this.setError = setError.bind(this);
     this.closeError = closeError.bind(this);
-    this.sendPost = sendPost.bind(this);
   }
 
   componentWillUnmount() {
@@ -62,18 +61,21 @@ export default class LoginFace extends React.Component {
 
     if (HAS_BACKEND) {
       // Send the image to the backend
-      this.sendPost(FACE_REC_URL, data, (http) => {
-        const resp = JSON.parse(http.responseText);
-        if (resp.identity) {
-          // Login successful, verify with user
-          this.setState({ flow: LOGIN_FLOW.Verifying, identity: resp.identity });
-          // Prepare timeout if they don't respond
-          this.resetTimer = setTimeout(this.identityReset, IDENTITY_RESET_TIMEOUT);
-        } else if (resp.error) {
-          // Login failed, show the error
-          this.setError(resp.error.message || JSON.stringify(resp.error));
-        }
-      });
+      sendPost(FACE_REC_URL, data)
+        .then((http) => {
+          const resp = JSON.parse(http.responseText);
+          if (resp.identity) {
+            // Login successful, verify with user
+            this.setState({ flow: LOGIN_FLOW.Verifying, identity: resp.identity });
+            // Prepare timeout if they don't respond
+            this.resetTimer = setTimeout(this.identityReset, IDENTITY_RESET_TIMEOUT);
+          } else if (resp.error) {
+            // Login failed, show the error
+            this.setError(resp.error.message || JSON.stringify(resp.error));
+          }
+        }).catch((err) => {
+          this.setError(err);
+        });
     } else {
       this.setState({ flow: LOGIN_FLOW.Verifying, identity: 'John Smith' });
     }
@@ -86,9 +88,12 @@ export default class LoginFace extends React.Component {
     // Say that we're logging in then tell the backend to actually do it
     this.setState({ flow: LOGIN_FLOW.LoggingIn });
     if (HAS_BACKEND) {
-      this.sendPost('/verify', { verify: true }, (http) => {
-        this.setState({ flow: LOGIN_FLOW.LoggedIn });
-      });
+      sendPost('/verify', { verify: true })
+        .then(() => {
+          this.setState({ flow: LOGIN_FLOW.LoggedIn });
+        }).catch((err) => {
+          this.setError(err);
+        });
     } else {
       // Simulate processing
       setTimeout(() => {
