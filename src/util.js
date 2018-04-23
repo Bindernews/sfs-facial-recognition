@@ -1,3 +1,29 @@
+import React from 'react';
+import { Redirect } from 'react-router-dom';
+
+/**
+ * Renders a <Redirect> tag if the current object has one set.
+ */
+function renderRedirect() {
+  const to = this.m_redirectTo;
+  this.m_redirectTo = null;
+  if (typeof to === 'string') {
+    return (<Redirect to={to} />);
+  }
+  return (null);
+}
+
+function redirectTo(to) {
+  this.m_redirectTo = to;
+  this.forceUpdate();
+}
+
+export function mixinRedirect(self) {
+  self.m_redirectTo = null;
+  self.redirectTo = redirectTo.bind(self);
+  self.renderRedirect = renderRedirect.bind(self);
+  return self;
+}
 
 export function sendPost(url, data, timeout) {
   // assert(onload && onfail, 'Either onload or onfail not specified');

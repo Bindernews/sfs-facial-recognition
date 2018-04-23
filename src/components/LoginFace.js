@@ -8,7 +8,7 @@ import Dialog, {
   DialogContent,
 } from 'material-ui/Dialog';
 
-import { sendPost } from '../util';
+import { sendPost, mixinRedirect } from '../util';
 import VideoDisplay from './VideoDisplay';
 import ErrorDialog, { setError, closeError } from './ErrorDialog';
 
@@ -23,6 +23,7 @@ const LOGIN_FLOW = {
   Verifying: 2,
   LoggingIn: 3,
   LoggedIn: 4,
+  GotoRegister: 5,
 };
 
 export default class LoginFace extends React.Component {
@@ -45,6 +46,7 @@ export default class LoginFace extends React.Component {
     // Create setError and closeError functions for ourself
     this.setError = setError.bind(this);
     this.closeError = closeError.bind(this);
+    mixinRedirect(this);
   }
 
   componentWillUnmount() {
@@ -121,6 +123,7 @@ export default class LoginFace extends React.Component {
    */
   identityWrong() {
     this.identityReset();
+    this.setState({ flow: LOGIN_FLOW.GotoRegister });
   }
 
   loginCancel() {
@@ -138,6 +141,7 @@ export default class LoginFace extends React.Component {
 
     return (
       <div>
+        {this.renderRedirect()}
         {/* Show the video and "Take a picture" button */}
         <Grid container direction="column" justify="center" alignItems="center">
           <Grid item>
@@ -185,6 +189,14 @@ export default class LoginFace extends React.Component {
           <DialogTitle>{`You're logged in ${identity}`}</DialogTitle>
           <DialogActions>
             <Button onClick={this.closeLogin}>Ok</Button>
+          </DialogActions>
+        </Dialog>
+        {/* Dialog to ask if you want to register your face */}
+        <Dialog open={flow === LOGIN_FLOW.GotoRegister} onClose={this.identityReset}>
+          <DialogTitle>Would you like to register your face?</DialogTitle>
+          <DialogActions>
+            <Button onClick={() => this.redirectTo('/register/1')}>Yes</Button>
+            <Button onClick={this.identityReset}>No</Button>
           </DialogActions>
         </Dialog>
         {/* Dialog for errors. */}
