@@ -55,16 +55,19 @@ export default class RegisterFace extends React.Component {
       email: document.getElementById('email').value,
       imgBase64: this.state.photo,
     };
-    sendPost('/introduce', data, 2000)
-      .then((http) => {
+    if (!MOCK) {
+      sendPost('/introduce', data, 2000)
+        .then((http) => {
+          this.setState({ redirect: '/register/4' });
+        }).catch((err) => {
+          this.setState({ redirect: '/register/1' });
+          this.setError(err);
+        });
+    } else {
+      setTimeout(() => {
         this.setState({ redirect: '/register/4' });
-      }).catch((err) => {
-        this.setState({ redirect: '/register/1' });
-        this.setError(err);
-      });
-    /* window.setTimeout(() => {
-      this.setState({ redirect: '/register/4' });
-    }, 2000); */
+      }, 1000);
+    }
   }
 
   render() {

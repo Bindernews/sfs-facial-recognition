@@ -15,8 +15,6 @@ import ErrorDialog, { setError, closeError } from './ErrorDialog';
 
 // Timeout before we reset for the next user.
 const IDENTITY_RESET_TIMEOUT = 10 * 1000;
-// Set to false to not send backend data. Useful for debugging.
-const HAS_BACKEND = true;
 
 const LOGIN_FLOW = {
   Normal: 0,
@@ -55,7 +53,7 @@ export default class LoginEmail extends React.Component {
     };
 
     this.setState({ flow: LOGIN_FLOW.LoggingIn });
-    if (HAS_BACKEND) {
+    if (!MOCK) {
       sendPost('/verify', data)
         .then(() => {
           this.setState({ flow: LOGIN_FLOW.LoggedIn, name: data.name  });
@@ -66,7 +64,7 @@ export default class LoginEmail extends React.Component {
       // Simulate processing
       setTimeout(() => {
         this.setState({ flow: LOGIN_FLOW.LoggedIn });
-      }, 2 * 1000);
+      }, 1000);
     }
   }
 
@@ -86,8 +84,6 @@ export default class LoginEmail extends React.Component {
   closeLogin() {
     this.setState({ flow: LOGIN_FLOW.Normal, redirect: '/login-face' });
   }
-
-
 
   render() {
     const { flow, name, error, redirect } = this.state;

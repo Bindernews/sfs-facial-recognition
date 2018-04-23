@@ -9,5 +9,8 @@ module.exports = {
         "react/jsx-first-prop-new-line": [0],
         "react/jsx-closing-bracket-location": [0],
         "linebreak-style": [0],
-    }
+    },
+    "globals": {
+        "MOCK": false,
+    },
 };

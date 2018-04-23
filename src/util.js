@@ -1,4 +1,10 @@
 
+export function mockT(f) {
+  if (MOCK) {
+    setTimeout(f, 1000);
+  }
+}
+
 export function sendPost(url, data, timeout) {
   // assert(onload && onfail, 'Either onload or onfail not specified');
   return new Promise((resolve, reject) => {

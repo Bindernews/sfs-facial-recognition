@@ -16,14 +16,13 @@ import ErrorDialog, { setError, closeError } from './ErrorDialog';
 const FACE_REC_URL = '/identify';
 // Timeout before we reset for the next user.
 const IDENTITY_RESET_TIMEOUT = 10 * 1000;
-// Set to false to not send backend data. Useful for debugging.
-const HAS_BACKEND = true;
 
 const LOGIN_FLOW = {
   Normal: 0,
-  Verifying: 1,
-  LoggingIn: 2,
-  LoggedIn: 3,
+  Identifying: 1,
+  Verifying: 2,
+  LoggingIn: 3,
+  LoggedIn: 4,
 };
 
 export default class LoginFace extends React.Component {
@@ -58,9 +57,9 @@ export default class LoginFace extends React.Component {
       imgBase64: this.videoRef.captureAsPng(),
     };
     // Reset the UI if they take more than 2 minutes
-//    this.resetTimer = setTimeout(this.identityReset, IDENTITY_RESET_TIMEOUT);
+    this.resetTimer = setTimeout(this.identityReset, IDENTITY_RESET_TIMEOUT);
 
-    if (HAS_BACKEND) {
+    if (!MOCK) {
       // Send the image to the backend
       sendPost(FACE_REC_URL, data)
         .then((http) => {
@@ -78,7 +77,9 @@ export default class LoginFace extends React.Component {
           this.setError(err);
         });
     } else {
-      this.setState({ flow: LOGIN_FLOW.Verifying, identity: 'John Smith' });
+      setTimeout(() => {
+        this.setState({ flow: LOGIN_FLOW.Verifying, identity: 'John Smith' });
+      }, 1000);
     }
   }
 
@@ -88,7 +89,7 @@ export default class LoginFace extends React.Component {
   identityCorrect() {
     // Say that we're logging in then tell the backend to actually do it
     this.setState({ flow: LOGIN_FLOW.LoggingIn });
-    if (HAS_BACKEND) {
+    if (!MOCK) {
       sendPost('/verify', { verify: true, identity: this.state.identity })
         .then(() => {
           this.setState({ flow: LOGIN_FLOW.LoggedIn });
@@ -99,7 +100,7 @@ export default class LoginFace extends React.Component {
       // Simulate processing
       setTimeout(() => {
         this.setState({ flow: LOGIN_FLOW.LoggedIn });
-      }, 2 * 1000);
+      }, 1000);
     }
   }
 
@@ -150,6 +151,15 @@ export default class LoginFace extends React.Component {
             </Button>
           </Grid>
         </Grid>
+        <Dialog open={flow === LOGIN_FLOW.Identifying}>
+          <DialogTitle>Identifying you</DialogTitle>
+          <DialogContent>
+            <CircularProgress />
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={this.loginCancel}>Cancel</Button>
+          </DialogActions>
+        </Dialog>
         {/* Dialog to ask if you are who the face rec thinks you are. */}
         <Dialog open={flow === LOGIN_FLOW.Verifying}>
           <DialogTitle>Is your name {identity}?</DialogTitle>
