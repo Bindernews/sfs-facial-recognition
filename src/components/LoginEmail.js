@@ -1,4 +1,5 @@
 import React from 'react';
+import { Redirect } from 'react-router-dom';
 import TextField from 'material-ui/TextField';
 import Grid from 'material-ui/Grid';
 import Button from 'material-ui/Button';
@@ -19,9 +20,8 @@ const HAS_BACKEND = true;
 
 const LOGIN_FLOW = {
   Normal: 0,
-  Verifying: 1,
-  LoggingIn: 2,
-  LoggedIn: 3,
+  LoggingIn: 1,
+  LoggedIn: 2,
 };
 
 export default class LoginEmail extends React.Component {
@@ -29,19 +29,17 @@ export default class LoginEmail extends React.Component {
     super(props);
     this.state = {
       flow: LOGIN_FLOW.Normal,
-      identity: null,
       error: {},
+      name: null,
+      redirect: null,
     };
-    this.videoRef = null;
     this.resetTimer = null;
 
     // Bind callbacks
-    const callbacks = ['identityCorrect', 'identityWrong', 'identityReset',
-      'loginCancel', 'closeLogin'];
-    for (let i = 0; i < callbacks.length; i += 1) {
-      this[callbacks[i]] = Object.getPrototypeOf(this)[callbacks[i]].bind(this);
-    }
-    // Create setError and closeError functions for ourself
+    this.doLogin = this.doLogin.bind(this);
+    this.identityReset = this.identityReset.bind(this);
+    this.closeLogin = this.closeLogin.bind(this);
+    this.loginCancel = this.loginCancel.bind(this);
     this.setError = setError.bind(this);
     this.closeError = closeError.bind(this);
   }
@@ -49,12 +47,18 @@ export default class LoginEmail extends React.Component {
   /**
    * Callback for when the user verifies the identity is correct.
    */
-  identityCorrect() {
+  doLogin() {
+    const data = {
+      verify: true,
+      name: document.getElementById('fullName').value,
+      email: document.getElementById('email').value,
+    };
+
     this.setState({ flow: LOGIN_FLOW.LoggingIn });
     if (HAS_BACKEND) {
-      sendPost('/verify', { verify: true })
+      sendPost('/verify', data)
         .then(() => {
-          this.setState({ flow: LOGIN_FLOW.LoggedIn });
+          this.setState({ flow: LOGIN_FLOW.LoggedIn, name: data.name  });
         }).catch((err) => {
           this.setError(err);
         });
@@ -66,22 +70,12 @@ export default class LoginEmail extends React.Component {
     }
   }
 
-  /**
-   * Callback to reset the identity for new people.
-   */
   identityReset() {
-    this.setState({ flow: LOGIN_FLOW.Normal, identity: null });
+    this.setState({ flow: LOGIN_FLOW.Normal, name: null });
     if (this.resetTimer) {
       clearTimeout(this.resetTimer);
     }
     this.resetTimer = null;
-  }
-
-  /**
-   * Callback for when the user says the identity is wrong.
-   */
-  identityWrong() {
-    this.identityReset();
   }
 
   loginCancel() {
@@ -90,34 +84,40 @@ export default class LoginEmail extends React.Component {
   }
 
   closeLogin() {
-    // Set the flow back to normal and let the identity reset once the animation is finished
-    this.setState({ flow: LOGIN_FLOW.Normal });
+    this.setState({ flow: LOGIN_FLOW.Normal, redirect: '/login-face' });
   }
 
+
+
   render() {
-    const { error, identity, flow } = this.state;
+    const { flow, name, error, redirect } = this.state;
+
+    const redirectTag = (redirect && <Redirect to={redirect} />) || (null);
+    // Note: Normally you DON'T do this, but we want to set state w/o re-rendering
+    this.state.redirect = null;
+
 
     return (
       <div>
-        {/* Show the video and "Take a picture" button */}
-        <Grid container direction="column" justify="center" alignItems="center">
+        {redirectTag}
+        <Grid container direction="column" justify="flex-start" alignItems="center" spacing={16}>
           <Grid item>
-            <TextField
-              hintText="john.doe@rit.edu"
-              floatingLabelText="Email"
-              floatingLabelFixed={true}
-            /><br />
+            Now please fill in your information.
           </Grid>
           <Grid item>
             <TextField
-              floatingLabelText="Password"
-              floatingLabelFixed={true}
-            /><br />
+              id="fullName"
+              label="Name"
+            />
           </Grid>
           <Grid item>
-            <Button onClick={this.identityCorrect}>
-              Login
-            </Button>
+            <TextField
+              id="email"
+              label="Email"
+            />
+          </Grid>
+          <Grid item>
+            <Button onClick={this.doLogin}>Login</Button>
           </Grid>
         </Grid>
         {/* Spinny wheel dialog */}
@@ -132,7 +132,7 @@ export default class LoginEmail extends React.Component {
         </Dialog>
         {/* Dialog to confirm you've logged in. */}
         <Dialog open={flow === LOGIN_FLOW.LoggedIn} onClose={this.identityReset}>
-          <DialogTitle>{`You're logged in ${identity}`}</DialogTitle>
+          <DialogTitle>{`You're logged in ${name}`}</DialogTitle>
           <DialogActions>
             <Button onClick={this.closeLogin}>Ok</Button>
           </DialogActions>

@@ -13,7 +13,7 @@ import VideoDisplay from './VideoDisplay';
 import ErrorDialog, { setError, closeError } from './ErrorDialog';
 
 // URL to send faces to
-const FACE_REC_URL = '/receive';
+const FACE_REC_URL = '/identify';
 // Timeout before we reset for the next user.
 const IDENTITY_RESET_TIMEOUT = 10 * 1000;
 // Set to false to not send backend data. Useful for debugging.
@@ -50,6 +50,7 @@ export default class LoginFace extends React.Component {
 
   componentWillUnmount() {
     this.videoRef = null;
+    this.identityReset();
   }
 
   doFaceRec() {
@@ -57,7 +58,7 @@ export default class LoginFace extends React.Component {
       imgBase64: this.videoRef.captureAsPng(),
     };
     // Reset the UI if they take more than 2 minutes
-    this.resetTimer = setTimeout(this.identityReset, IDENTITY_RESET_TIMEOUT);
+//    this.resetTimer = setTimeout(this.identityReset, IDENTITY_RESET_TIMEOUT);
 
     if (HAS_BACKEND) {
       // Send the image to the backend
@@ -88,7 +89,7 @@ export default class LoginFace extends React.Component {
     // Say that we're logging in then tell the backend to actually do it
     this.setState({ flow: LOGIN_FLOW.LoggingIn });
     if (HAS_BACKEND) {
-      sendPost('/verify', { verify: true })
+      sendPost('/verify', { verify: true, identity: this.state.identity })
         .then(() => {
           this.setState({ flow: LOGIN_FLOW.LoggedIn });
         }).catch((err) => {
@@ -151,7 +152,7 @@ export default class LoginFace extends React.Component {
         </Grid>
         {/* Dialog to ask if you are who the face rec thinks you are. */}
         <Dialog open={flow === LOGIN_FLOW.Verifying}>
-          <DialogTitle>Are you {identity}?</DialogTitle>
+          <DialogTitle>Is your name {identity}?</DialogTitle>
           <DialogActions>
             <Button onClick={this.identityCorrect}>Yes</Button>
             <Button onClick={this.identityWrong}>No</Button>
