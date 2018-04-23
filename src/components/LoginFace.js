@@ -58,6 +58,7 @@ export default class LoginFace extends React.Component {
     };
     // Reset the UI if they take more than 2 minutes
     this.resetTimer = setTimeout(this.identityReset, IDENTITY_RESET_TIMEOUT);
+    this.setState({ flow: LOGIN_FLOW.Identifying });
 
     if (!MOCK) {
       // Send the image to the backend
@@ -151,8 +152,9 @@ export default class LoginFace extends React.Component {
             </Button>
           </Grid>
         </Grid>
+        {/* Dialog to show when your face is being identified. */}
         <Dialog open={flow === LOGIN_FLOW.Identifying}>
-          <DialogTitle>Identifying you</DialogTitle>
+          <DialogTitle>Identifying you...</DialogTitle>
           <DialogContent>
             <CircularProgress />
           </DialogContent>
